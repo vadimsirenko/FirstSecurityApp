@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -29,6 +31,7 @@ import java.util.function.Function;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class WebSecurityConfig {
 
     @Bean
@@ -50,12 +53,13 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http //.csrf().disable()
+        return http
                 .authorizeHttpRequests()
-                .requestMatchers("/hello", "/auth/login", "/auth/registration", "/error").permitAll()
+                .requestMatchers("/admin").hasAnyRole("USER", "ADMIN")
+                .requestMatchers( "/auth/login", "/auth/registration", "/error").permitAll()
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/**").authenticated()
+                .requestMatchers("/hello", "/showUserInfo").hasAnyRole("USER", "ADMIN")
                 .and().formLogin()
                 .and().formLogin((form)-> form.loginPage("/auth/login").permitAll()
                         .loginProcessingUrl("/process_login")

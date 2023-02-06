@@ -18,7 +18,7 @@
     <input type="password" th:field="*{password}" id="password"/>
     <div style="color:red" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Password Error</div>
     <br />
-    <input type="submit" name="Зарегистрироваться">
+    <input type="submit" value="Зарегистрироваться">
 </form>
 </body>
 </html>
