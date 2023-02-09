@@ -1,46 +1,42 @@
 package ru.vasire.FirstSecurityApp.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.Filter;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import ru.vasire.FirstSecurityApp.models.Person;
-import ru.vasire.FirstSecurityApp.repositories.PeopleRepository;
-import ru.vasire.FirstSecurityApp.services.UserDetailsServiceImpl;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ru.vasire.FirstSecurityApp.services.PersonDetailsService;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class WebSecurityConfig {
 
+    private final JWTFilter jwtFilter;
+
+    public WebSecurityConfig(JWTFilter jwtFilter) {
+        this.jwtFilter = jwtFilter;
+    }
+
     @Bean
-    public UserDetailsService userDetailsService(UserDetailsServiceImpl service){
+    public UserDetailsService userDetailsService(PersonDetailsService service){
         return service;
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsServiceImpl service){
+    public AuthenticationProvider authenticationProvider(PersonDetailsService service){
         DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
         authenticationProvider.setUserDetailsService(service);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
@@ -53,13 +49,18 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
+
+         return http.csrf().disable()
+                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests()
                 .requestMatchers("/admin").hasAnyRole("USER", "ADMIN")
                 .requestMatchers( "/auth/login", "/auth/registration", "/error").permitAll()
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/hello", "/showUserInfo").hasAnyRole("USER", "ADMIN")
+
+                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+
                 .and().formLogin()
                 .and().formLogin((form)-> form.loginPage("/auth/login").permitAll()
                         .loginProcessingUrl("/process_login")
@@ -67,5 +68,15 @@ public class WebSecurityConfig {
                         .failureUrl("/auth/login?error"))
                 .logout((logout) -> logout.logoutUrl("/logout").logoutSuccessUrl("/auth/login").permitAll())
                 .build();
+    }
+
+    @Bean
+    public ModelMapper modelMapper(){
+        return new ModelMapper();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

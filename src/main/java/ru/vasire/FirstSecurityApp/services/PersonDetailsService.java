@@ -11,11 +11,11 @@ import ru.vasire.FirstSecurityApp.repositories.PeopleRepository;
 import java.util.Optional;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class PersonDetailsService implements UserDetailsService {
 
     private final PeopleRepository peopleRepository;
 
-    public UserDetailsServiceImpl(PeopleRepository peopleRepository) {
+    public PersonDetailsService(PeopleRepository peopleRepository) {
         this.peopleRepository = peopleRepository;
     }
 

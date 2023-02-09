@@ -3,6 +3,7 @@ package ru.vasire.FirstSecurityApp.util;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import ru.vasire.FirstSecurityApp.dto.PersonDTO;
 import ru.vasire.FirstSecurityApp.models.Person;
 import ru.vasire.FirstSecurityApp.services.PeopleService;
 @Component
